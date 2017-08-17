@@ -213,6 +213,102 @@ void lamda(){
     cout << y << endl;
 }
 
+/*****************************************************/
+
+class PassPointerClass{
+public:
+    std::shared_ptr<int> p1_;
+    PassPointerClass(){
+        cout << "constructor" << endl;
+    }
+    ~PassPointerClass(){
+        cout << "destructor" << endl;
+    }
+    void passPointer(std::shared_ptr<int> p1){
+        p1_ = p1;
+        *p1_ = 6;
+    }
+};
+
+class Node
+{
+    int value;
+public:
+    std::shared_ptr<Node> leftPtr;
+    std::shared_ptr<Node> rightPtr;
+    std::weak_ptr<Node> parentPtr; // change from shared to weak
+    Node(int val) : value(val)     {
+        std::cout<<"Contructor"<<std::endl;
+    }
+    ~Node()     {
+        std::cout<<"Destructor"<<std::endl;
+    }
+};
+
+void passUnique(std::unique_ptr<int>& ptr){
+    cout << "unq: " << *ptr << endl;
+}
+
+void smartpointer(){
+
+    std::shared_ptr<int> p1(new int());
+    *p1 = 5;
+    cout << p1.use_count() << endl;
+    std::shared_ptr<PassPointerClass> passPointer(new PassPointerClass());
+    passPointer->passPointer(p1);
+    cout << p1.use_count() << endl;
+    passPointer.reset();
+    cout << p1.use_count() << endl;
+    cout << *p1 << endl;
+    p1 = nullptr;
+    cout << p1.use_count() << endl;
+    p1 = std::make_shared<int>(5);
+    cout << p1.use_count() << endl;
+    cout << p1.use_count() << endl;
+    cout << *p1 << endl;
+    int* p1xx = p1.get();
+    cout << *p1xx << endl;
+
+    std::shared_ptr<PassPointerClass> p3(new PassPointerClass[2], [](PassPointerClass* passPointerClassArray){
+        cout << "special destructor" << endl;
+        delete[] passPointerClassArray;
+    });
+    p3.reset();
+
+    std::shared_ptr<int> p1x = std::make_shared<int>(5);
+    std::shared_ptr<int> p2x(p1x);
+    if(p1x == p2x){
+        cout << "pointers equal" << endl;
+        *p1x = 6;
+        cout << *p2x << endl;
+    }
+
+    std::shared_ptr<Node> ptrNode = std::make_shared<Node>(4);
+    ptrNode->leftPtr = std::make_shared<Node>(2);
+    ptrNode->leftPtr->parentPtr = ptrNode;
+    ptrNode->rightPtr = std::make_shared<Node>(5);
+    ptrNode->rightPtr->parentPtr = ptrNode;
+    std::cout<<"ptr reference count = "<<ptrNode.use_count()<<std::endl;
+    std::cout<<"ptr->leftPtr reference count = "<<ptrNode->leftPtr.use_count()<<std::endl;
+    std::cout<<"ptr->rightPtr reference count = "<<ptrNode->rightPtr.use_count()<<std::endl;
+
+    std::shared_ptr<int> ptr = std::make_shared<int>(4);
+    std::weak_ptr<int> weakPtr(ptr);
+    std::shared_ptr<int> ptr_2 =  weakPtr.lock();
+    if(ptr_2)
+        std::cout<<(*ptr_2)<<std::endl;
+    std::cout<<"Reference Count :: "<<ptr_2.use_count()<<std::endl;
+    if(weakPtr.expired() == false)
+        std::cout<<"Not expired yet"<<std::endl;
+
+    // cant link unqiue pointer, only movable always guranteed to die
+    std::unique_ptr<int> unqPointer(new int(12));
+    passUnique(unqPointer);
+    std::unique_ptr<int> newPtr(std::move(unqPointer));
+    cout << *newPtr << endl;
+    //cout << *unqPointer << endl;
+}
+
 int main (int argc, char ** argv)
 {
     struct x{
@@ -223,7 +319,10 @@ int main (int argc, char ** argv)
 
     //functor();
 
-    lamda();
+    //lamda();
 
+    smartpointer();
+
+    cout << "---" << endl;
     return (0);
 }
