@@ -8,6 +8,7 @@
 #include <functional>
 #include <algorithm>
 #include <tuple>
+#include <chrono>
 //#include <
 
 //range-based for loops
@@ -37,6 +38,10 @@ struct Object{
 
 /*****************************************************/
 
+auto addFunc(int x, int y)-> int{
+    return x+y;
+}
+
 void iterators(){
     std::vector<int> vectorInt = {1, 2};
     for(auto& i : vectorInt) cout << i << endl;
@@ -58,6 +63,8 @@ void iterators(){
     for (auto& kv : mapObj) {
         cout << kv.first << kv.second.x << endl;
     }
+
+    auto out = addFunc(2,4);
 }
 
 /*****************************************************/
@@ -309,6 +316,193 @@ void smartpointer(){
     //cout << *unqPointer << endl;
 }
 
+/*****************************************************/
+
+class ThreadClass{
+public:
+    ThreadClass(){}
+    ~ThreadClass(){}
+
+    int internalVar_ = 5;
+    std::thread interalThread_;
+
+    void workerThread(){
+        while(1){
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            cout << "thread: " << internalVar_ << endl;
+        }
+    }
+    static void workerThreadStatic(ThreadClass* threadClass){
+
+    }
+    void startThread(){
+        //interalThread_ = std::thread(&ThreadClass::workerThreadStatic, this);
+        interalThread_ = std::thread(std::bind(&ThreadClass::workerThread, this));
+    }
+};
+
+void threads(){
+    ThreadClass threadClass;
+    threadClass.startThread();
+    threadClass.interalThread_.join();
+}
+
+/*****************************************************/
+
+class int_ext
+{
+public:
+    int n_ = 0;
+    int_ext& operator=(int_ext& other){
+        this->n_ = other.n_;
+        return *this;
+    }
+    int_ext& operator=(int n){
+        n_ = n;
+        return *this;
+    }
+    void operator+=(int n){
+        n_+=n;
+    }
+    void operator+=(int_ext& other){
+        n_+=other.n_;
+    }
+    // friend namespace scope more flexible
+    friend ostream& operator<<(ostream& os, const int_ext& data){
+        os << "nval: " << data.n_;
+    }
+};
+
+void overload(){
+    int_ext x,y;
+    x = y;
+
+    x = 5;
+    x+=5;
+    cout << x << endl;
+
+    y = 1;
+    x+=y;
+    cout << x << endl;
+}
+
+/*****************************************************/
+
+class ContTest{
+public:
+    ContTest(){}
+    ContTest(const ContTest & obj) {
+        std::cout << "Copy Constructor" << std::endl;
+    }
+    ContTest & operator=(const ContTest & obj) {
+        if(this != &obj)
+        {
+            std::cout << "Assigment Operator" << std::endl;
+        }
+    }
+    std::mutex m;
+};
+
+class Container {
+    int * m_Data;
+public:
+    Container() {
+        //Allocate an array of 20 int on heap
+        m_Data = new int[20];
+
+        std::cout << "Constructor: Allocation 20 int" << std::endl;
+    }
+    ~Container() {
+        if (m_Data) {
+            delete[] m_Data;
+            m_Data = NULL;
+        }
+    }
+
+    // Copy constructor
+    Container(const Container & obj) {
+        //Allocate an array of 20 int on heap
+        m_Data = new int[20];
+
+        //Copy the data from passed object
+        for (int i = 0; i < 20; i++)
+            m_Data[i] = obj.m_Data[i];
+
+        std::cout << "Copy Constructor: Allocation 20 int" << std::endl;
+    }
+
+    //Assignment Operator
+    Container & operator=(const Container & obj) {
+
+        if(this != &obj)
+        {
+            //Allocate an array of 20 int on heap
+            m_Data = new int[20];
+
+            //Copy the data from passed object
+            for (int i = 0; i < 20; i++)
+                m_Data[i] = obj.m_Data[i];
+
+            std::cout << "Assigment Operator: Allocation 20 int" << std::endl;
+        }
+    }
+
+    // Move Constructor
+    Container(Container && obj){
+        // Just copy the pointer
+        m_Data = obj.m_Data;
+
+        // Set the passed object's member to NULL
+        obj.m_Data = NULL;
+
+        std::cout<<"Move Constructor"<<std::endl;
+    }
+
+    // Move Assignment Operator
+    Container& operator=(Container && obj){
+        if(this != &obj)
+        {
+            // Just copy the pointer
+            m_Data = obj.m_Data;
+
+            // Set the passed object's member to NULL
+            obj.m_Data = NULL;
+
+            std::cout<<"Move Assignment Operator"<<std::endl;
+        }
+    }
+};
+
+Container passFunction(Container& container){
+    return container;
+}
+
+Container getContainer(){
+    Container c;
+    return c;
+}
+
+void moveconst(){
+    // Create a vector of Container Type
+    std::vector<Container> vecOfContainers;
+
+    //Add object returned by function into the vector
+    Container cont;
+    vecOfContainers.push_back(cont);
+    vecOfContainers.clear();
+    cout << "--" << endl;
+    vecOfContainers.reserve(3);
+    vecOfContainers.push_back(Container());
+    vecOfContainers.push_back(Container());
+    vecOfContainers.push_back(Container());
+    cout << "--" << endl;
+    //Container cont2 = cont;
+    cont = getContainer();
+    cout << "--" << endl;
+    ContTest ct,ct2;
+    ct2 = ct;
+}
+
 int main (int argc, char ** argv)
 {
     struct x{
@@ -321,7 +515,13 @@ int main (int argc, char ** argv)
 
     //lamda();
 
-    smartpointer();
+    //smartpointer();
+
+    //threads();
+
+    //overload();
+
+    moveconst();
 
     cout << "---" << endl;
     return (0);
