@@ -22,3 +22,8 @@ add_executable(c++11test "c++11test.cpp")
 target_link_libraries(
   c++11test
 )
+
+add_executable(matrix "matrix.cpp")
+target_link_libraries(
+  matrix
+)
